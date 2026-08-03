@@ -6,10 +6,8 @@ on:
       - main
   workflow_dispatch:
 
-# WAJIB: Memberikan izin tambahan agar bot bisa memodifikasi file workflow (.yml)
 permissions:
   contents: write
-  workflows: write
 
 jobs:
   unzip-job:
@@ -20,16 +18,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Proses unzip menggunakan nama file yang benar
-      - name: Unzip Archive and Overwrite
+      # 2. Proses unzip dengan mengabaikan folder .github/workflows/
+      # Parameter -x digunakan untuk melarang ekstraksi folder tersebut
+      - name: Unzip Archive and Overwrite (Exclude Workflows)
         run: |
-          unzip -o GeneratorSoalSandi-UPDATED-FILES.zip -d .
+          unzip -o GeneratorSoalSandi-UPDATED-FILES.zip -d . -x ".github/workflows/*"
 
       # 3. Menyimpan perubahan kembali ke repositori
       - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.email "41898282+github-actions[bot]@://github.com"
           
           git add .
           
