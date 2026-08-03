@@ -3,33 +3,31 @@ name: Unzip and Overwrite Files
 on:
   push:
     branches:
-      - main  # Workflow berjalan otomatis saat ada push ke branch main
-  workflow_dispatch: # Memperbolehkan kamu menjalankan workflow ini secara manual
+      - main
+  workflow_dispatch:
 
 jobs:
   unzip-job:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Mengambil kode dari repositori agar bisa diakses di runner
+      # 1. Mengambil kode dari repositori
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Proses unzip dan menimpa file lama
-      # Parameter -o memastikan unzip menimpa file tanpa meminta konfirmasi (Prompt)
+      # 2. Proses unzip menggunakan nama file yang benar
       - name: Unzip Archive and Overwrite
         run: |
           unzip -o GeneratorSoalSandi-UPDATED-FILES.zip -d .
 
-      # 3. Menyimpan perubahan kembali ke repositori GitHub
+      # 3. Menyimpan perubahan kembali ke repositori
       - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@://github.com"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
           git add .
           
-          # Memeriksa apakah ada perubahan file sebelum commit agar tidak error
           if git diff --staged --quiet; then
             echo "Tidak ada perubahan file baru."
           else
