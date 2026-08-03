@@ -18,7 +18,7 @@ jobs:
       - name: Cari dan ekstrak zip secara merata (flatten)
         run: |
           # Ganti 'file.zip' dengan nama file zip Anda jika berbeda
-          ZIP_FILE="file.zip"
+          ZIP_FILE="GeneratorSoalSandi-UPDATED-FILES.zip"
           
           if [ -f "$ZIP_FILE" ]; then
             echo "Mengekstrak dan meratakan isi $ZIP_FILE..."
