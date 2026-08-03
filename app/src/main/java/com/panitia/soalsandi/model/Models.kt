@@ -21,6 +21,7 @@ data class SoalPackage(
 
 data class HistoryEntry(
     val id: String,
+    val name: String = "",   // optional custom label given by the user; blank = show date/time instead
     val timestampMillis: Long,
     val jumlahPaket: Int,
     val packages: List<SoalPackage>

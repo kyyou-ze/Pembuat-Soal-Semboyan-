@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-// BARIS 10 SUDAH DIHAPUS DI SINI
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +39,6 @@ fun SoalGrid(pkg: SoalPackage, modifier: Modifier = Modifier, columns: Int = 5) 
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 rowItems.forEach { item ->
-                    // Kode ini otomatis mengenali weight karena berada di dalam Row scope
                     SoalBox(item = item, modifier = Modifier.weight(1f))
                 }
             }
@@ -84,7 +82,6 @@ fun AnswerList(pkg: SoalPackage, modifier: Modifier = Modifier, columns: Int = 5
         pkg.items.chunked(columns).forEach { rowItems ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 rowItems.forEach { item ->
-                    // Kode ini juga otomatis mengenali weight karena berada di dalam Row scope
                     Text(
                         text = "${item.number}. ${item.letter}",
                         style = MaterialTheme.typography.bodyLarge,

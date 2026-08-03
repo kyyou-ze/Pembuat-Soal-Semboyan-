@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -21,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,10 +44,12 @@ fun HistoryScreen(
     onOpen: (HistoryEntry) -> Unit,
     onDownload: (HistoryEntry) -> Unit,
     onDelete: (HistoryEntry) -> Unit,
+    onRename: (HistoryEntry, String) -> Unit,
     onClearAll: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var confirmClearAll by remember { mutableStateOf(false) }
+    var renameTarget by remember { mutableStateOf<HistoryEntry?>(null) }
 
     Column(modifier = modifier.fillMaxSize()) {
         Row(
@@ -76,7 +80,13 @@ fun HistoryScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(entries, key = { it.id }) { entry ->
-                    HistoryCard(entry = entry, onOpen = onOpen, onDownload = onDownload, onDelete = onDelete)
+                    HistoryCard(
+                        entry = entry,
+                        onOpen = onOpen,
+                        onDownload = onDownload,
+                        onDelete = onDelete,
+                        onRenameRequested = { renameTarget = entry }
+                    )
                 }
             }
         }
@@ -98,6 +108,42 @@ fun HistoryScreen(
             }
         )
     }
+
+    val target = renameTarget
+    if (target != null) {
+        RenameDialog(
+            initialName = target.name,
+            onDismiss = { renameTarget = null },
+            onConfirm = { newName ->
+                renameTarget = null
+                onRename(target, newName)
+            }
+        )
+    }
+}
+
+@Composable
+private fun RenameDialog(initialName: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+    var text by remember { mutableStateOf(initialName) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Beri nama riwayat") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                singleLine = true,
+                placeholder = { Text("misal: Lomba Semboyan Jepara 2026") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(text.trim()) }) { Text("Simpan") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Batal") }
+        }
+    )
 }
 
 @Composable
@@ -105,21 +151,36 @@ private fun HistoryCard(
     entry: HistoryEntry,
     onOpen: (HistoryEntry) -> Unit,
     onDownload: (HistoryEntry) -> Unit,
-    onDelete: (HistoryEntry) -> Unit
+    onDelete: (HistoryEntry) -> Unit,
+    onRenameRequested: () -> Unit
 ) {
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("id", "ID")) }
     val firstPkg = entry.packages.firstOrNull()
+    val dateText = dateFormat.format(Date(entry.timestampMillis))
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    dateFormat.format(Date(entry.timestampMillis)),
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = entry.name.ifBlank { dateText },
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    if (entry.name.isNotBlank()) {
+                        Text(
+                            text = dateText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                IconButton(onClick = onRenameRequested) {
+                    Icon(Icons.Filled.Edit, contentDescription = "Ubah nama")
+                }
                 Text(
                     "${entry.jumlahPaket} paket",
                     style = MaterialTheme.typography.bodyMedium,
@@ -129,12 +190,10 @@ private fun HistoryCard(
 
             if (firstPkg != null) {
                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(top = 8.dp))
-                // Soal preview: first 6 codes
                 Text(
                     "Soal: " + firstPkg.items.take(6).joinToString("  ") { it.code },
                     style = MaterialTheme.typography.bodyMedium
                 )
-                // Answer preview: first 6 letters
                 Text(
                     "Jawaban: " + firstPkg.items.take(6).joinToString(" ") { "${it.number}.${it.letter}" },
                     style = MaterialTheme.typography.bodyMedium,

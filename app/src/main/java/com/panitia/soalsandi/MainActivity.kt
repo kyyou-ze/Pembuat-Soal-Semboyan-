@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -15,6 +16,8 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +60,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @androidx.compose.runtime.Composable
     private fun AppRoot() {
         var tab by remember { mutableStateOf(0) } // 0 = Generator, 1 = History
@@ -122,6 +126,15 @@ class MainActivity : ComponentActivity() {
         }
 
         Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(if (tab == 0) "Generator Soal Sandi" else "Riwayat") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            },
             bottomBar = {
                 NavigationBar {
                     NavigationBarItem(
@@ -161,6 +174,10 @@ class MainActivity : ComponentActivity() {
                     onDownload = { entry -> handleHistoryDownload(entry) },
                     onDelete = { entry ->
                         repository.deleteHistoryEntry(entry.id)
+                        refreshHistory()
+                    },
+                    onRename = { entry, newName ->
+                        repository.renameHistoryEntry(entry.id, newName)
                         refreshHistory()
                     },
                     onClearAll = {

@@ -63,6 +63,11 @@ class HistoryRepository(context: Context) {
         writeHistory(current)
     }
 
+    fun renameHistoryEntry(id: String, newName: String) {
+        val current = loadHistory().map { if (it.id == id) it.copy(name = newName) else it }
+        writeHistory(current)
+    }
+
     fun clearHistory() {
         writeHistory(emptyList())
     }
@@ -77,6 +82,7 @@ class HistoryRepository(context: Context) {
 
     private fun entryToJson(entry: HistoryEntry): JSONObject = JSONObject().apply {
         put("id", entry.id)
+        put("name", entry.name)
         put("timestampMillis", entry.timestampMillis)
         put("jumlahPaket", entry.jumlahPaket)
         val pkgArr = JSONArray()
@@ -89,6 +95,7 @@ class HistoryRepository(context: Context) {
         val packages = (0 until pkgArr.length()).map { packageFromJson(pkgArr.getJSONObject(it)) }
         return HistoryEntry(
             id = json.getString("id"),
+            name = json.optString("name", ""),
             timestampMillis = json.getLong("timestampMillis"),
             jumlahPaket = json.getInt("jumlahPaket"),
             packages = packages
