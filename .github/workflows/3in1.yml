@@ -6,6 +6,11 @@ on:
       - main
   workflow_dispatch:
 
+# WAJIB: Memberikan izin tambahan agar bot bisa memodifikasi file workflow (.yml)
+permissions:
+  contents: write
+  workflows: write
+
 jobs:
   unzip-job:
     runs-on: ubuntu-latest
