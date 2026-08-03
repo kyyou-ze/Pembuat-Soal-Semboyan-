@@ -1,51 +1,39 @@
-name: Ekstrak, Ratakan, dan Timpa Zip
+name: Unzip and Overwrite Files
 
 on:
-  workflow_dispatch: # Bisa dijalankan manual dari tab Actions di GitHub
+  push:
+    branches:
+      - main  # Workflow berjalan otomatis saat ada push ke branch main
+  workflow_dispatch: # Memperbolehkan kamu menjalankan workflow ini secara manual
 
 jobs:
-  unzip-and-flatten:
+  unzip-job:
     runs-on: ubuntu-latest
-    
-    # Memberikan izin token untuk menulis (write) ke repositori
-    permissions:
-      contents: write
 
     steps:
-      - name: Ambil kode repo
+      # 1. Mengambil kode dari repositori agar bisa diakses di runner
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Cari dan ekstrak zip secara merata (flatten)
+      # 2. Proses unzip dan menimpa file lama
+      # Parameter -o memastikan unzip menimpa file tanpa meminta konfirmasi (Prompt)
+      - name: Unzip Archive and Overwrite
         run: |
-          # Ganti 'file.zip' dengan nama file zip Anda jika berbeda
-          ZIP_FILE="GeneratorSoalSandi-UPDATED-FILES.zip"
-          
-          if [ -f "$ZIP_FILE" ]; then
-            echo "Mengekstrak dan meratakan isi $ZIP_FILE..."
-            # Ekstrak semua file langsung ke direktori saat ini (-j = junk paths) (-o = overwrite)
-            unzip -j -o "$ZIP_FILE" -d .
-            
-            echo "Menghapus file zip asli..."
-            rm "$ZIP_FILE"
-          else
-            echo "Error: File $ZIP_FILE tidak ditemukan!"
-            exit 1
-          fi
+          unzip -o nama_file_kamu.zip -d .
 
-      - name: Commit perubahan ke repository
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 3. Menyimpan perubahan kembali ke repositori GitHub
+      - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.email "41898282+github-actions[bot]@://github.com"
           
           git add .
           
-          # Menghindari error jika tidak ada perubahan file setelah unzip
+          # Memeriksa apakah ada perubahan file sebelum commit agar tidak error
           if git diff --staged --quiet; then
-            echo "Tidak ada perubahan untuk di-commit"
+            echo "Tidak ada perubahan file baru."
           else
-            git commit -m "chore: ekstrak, ratakan, dan timpa file dari zip"
-            git push origin HEAD:${{ github.ref }}
+            git commit -m "Automated: Unzip and overwrite files [skip ci]"
+            git push
           fi
           
