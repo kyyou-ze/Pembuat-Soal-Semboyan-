@@ -25,7 +25,31 @@ langsung di server GitHub (project ini sengaja tidak menyertakan
 `gradlew`/`gradle-wrapper.jar` biner), jadi tidak perlu Android Studio atau
 Gradle terpasang di komputer sama sekali — cukup GitHub.
 
-## Cara membuka project di Android Studio (opsional, kalau mau develop lokal)
+## Update file lewat GitHub tanpa git di komputer (folder `incoming/`)
+
+Kalau saya kirim file yang sudah diperbaiki/ditambah (bukan seluruh
+project), begini cara pasangnya lewat web GitHub saja:
+
+1. Di repo GitHub, masuk ke folder `incoming/`.
+2. Upload file yang saya kirim ke situ, **dengan struktur folder yang sama
+   persis seperti path aslinya di project** (misalnya file
+   `app/src/main/java/.../MainActivity.kt` diupload ke
+   `incoming/app/src/main/java/.../MainActivity.kt`).
+3. Commit langsung ke branch `main`.
+4. Workflow **"Sync Incoming Files"** otomatis jalan: dia "mengintip" apakah
+   sudah ada file dengan path yang sama di repo — kalau ada, **ditimpa**;
+   kalau belum ada, file itu ditambahkan sebagai baru. Setelah itu file di
+   `incoming/` otomatis dibersihkan (dipindah ke tempat aslinya), lalu
+   workflow **"Build APK"** otomatis dipicu untuk build ulang.
+
+Catatan: workflow ini sendiri (`.github/workflows/sync-incoming.yml`) dan
+`build.yml` harus ditambahkan langsung ke path aslinya (bukan lewat
+`incoming/`) saat pertama kali, karena GitHub baru bisa menjalankan sebuah
+workflow kalau file-nya sudah ada di `.github/workflows/`. Setelah keduanya
+ada, update-update berikutnya (termasuk ke file workflow itu sendiri) bisa
+lewat `incoming/` seperti biasa.
+
+
 
 1. Buka **Android Studio** (disarankan versi terbaru, minimal Iguana/2023.2+).
 2. Pilih **Open**, arahkan ke folder `GeneratorSoalSandi` ini.
@@ -43,7 +67,7 @@ app/src/main/java/com/panitia/soalsandi/
 ├── cipher/CipherData.kt        Peta Sandi Kimia (A-Z) & Sandi Merah Putih (kode=kolom+baris, A→MP; Z tanpa kode)
 ├── model/Models.kt             SoalItem, SoalPackage, HistoryEntry
 ├── generator/SoalGenerator.kt  Logika generate 30 soal/paket, anti-duplikat
-├── data/HistoryRepository.kt   Penyimpanan lokal (JSON) riwayat & kombinasi terpakai
+├── data/HistoryRepository.kt   Penyimpanan lokal (JSON) riwayat & kombinasi terpakai, termasuk nama riwayat
 ├── export/
 │   ├── SoalRenderer.kt         Gambar kotak soal + jawaban (dipakai PDF & gambar)
 │   ├── PdfExporter.kt          Export PDF (android.graphics.pdf.PdfDocument)
@@ -52,7 +76,7 @@ app/src/main/java/com/panitia/soalsandi/
 │   └── FileSaver.kt            Simpan ke folder Downloads perangkat + share
 ├── ui/
 │   ├── GeneratorScreen.kt      Layar utama: tombol, grid soal, dialog
-│   ├── HistoryScreen.kt        Layar riwayat
+│   ├── HistoryScreen.kt        Layar riwayat (bisa diberi nama lewat ikon pensil)
 │   ├── components/SoalViews.kt Kotak soal & daftar jawaban (Compose)
 │   └── theme/                  Warna, tipografi, tema Material 3
 └── MainActivity.kt             Menyatukan semua layar & state
@@ -83,4 +107,3 @@ dilakukan di Android Studio:
   meminta.
 - Ikon aplikasi (`mipmap/ic_launcher`) masih placeholder sederhana — ganti
   sesuai selera lewat Image Asset Studio (klik kanan `res` → New → Image Asset).
-  
