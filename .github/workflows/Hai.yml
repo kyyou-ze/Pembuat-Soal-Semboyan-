@@ -1,0 +1,43 @@
+name: "Membatalkan Commit Chore Zip"
+
+on:
+  workflow_dispatch: # Memunculkan tombol "Run workflow" manual di web GitHub
+
+jobs:
+  revert-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Wajib agar bot bisa push perubahan balik ke repo
+
+    steps:
+      - name: Checkout Repositori
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Mengambil seluruh riwayat agar bisa mendeteksi commit lama
+
+      - name: Cari dan Batalkan Commit Chore
+        run: |
+          # Atur identitas Git bot
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@://github.com"
+
+          # Mencari hash ID commit terakhir yang memiliki pesan "chore: ekstrak, ratakan, dan timpa file dari zip"
+          TARGET_COMMIT=$(git log --grep="chore: ekstrak, ratakan, dan timpa file dari zip" -n 1 --format="%H")
+
+          if [ -z "$TARGET_COMMIT" ]; then
+            echo "Aksi Dibatalkan: Tidak ditemukan commit dengan pesan tersebut di riwayat terbaru."
+            exit 0
+          fi
+
+          echo "Menemukan commit yang akan dibatalkan: $TARGET_COMMIT"
+
+          # Melakukan revert (membalikkan efek commit tersebut secara aman)
+          # Menggunakan flag --no-edit agar tidak memunculkan text editor di server
+          git revert --no-edit $TARGET_COMMIT
+
+          # Ubah pesan commit revert agar menyertakan tag [skip ci] demi keamanan
+          git commit --amend -m "revert: membatalkan ekstrak zip [skip ci]"
+
+          # Push perubahan kembali ke branch asal
+          git push origin HEAD:${{ github.ref_name }}
+          
