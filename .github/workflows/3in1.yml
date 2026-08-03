@@ -19,7 +19,7 @@ jobs:
       # Parameter -o memastikan unzip menimpa file tanpa meminta konfirmasi (Prompt)
       - name: Unzip Archive and Overwrite
         run: |
-          unzip -o nama_file_kamu.zip -d .
+          unzip -o GeneratorSoalSandi-UPDATED-FILES.zip -d .
 
       # 3. Menyimpan perubahan kembali ke repositori GitHub
       - name: Commit and Push Changes
