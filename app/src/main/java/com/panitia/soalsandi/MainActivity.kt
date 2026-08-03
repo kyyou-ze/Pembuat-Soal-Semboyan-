@@ -14,6 +14,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -67,6 +71,7 @@ class MainActivity : ComponentActivity() {
         var packages by remember { mutableStateOf<List<SoalPackage>>(emptyList()) }
         var selectedIndex by remember { mutableStateOf(0) }
         var history by remember { mutableStateOf(repository.loadHistory()) }
+        val snackbarHostState = remember { SnackbarHostState() }
 
         fun refreshHistory() {
             history = repository.loadHistory()
@@ -89,40 +94,51 @@ class MainActivity : ComponentActivity() {
             refreshHistory()
         }
 
-        fun handleDownload(choice: DownloadChoice) {
-            lifecycleScope.launch {
-                val savedFile = withContext(Dispatchers.IO) {
-                    exportAndSave(packages, choice)
-                }
-                if (savedFile != null) {
+        /**
+         * Saves the file, then shows a Snackbar (NOT an automatic share-sheet —
+         * that used to fire on every download and could crash on some devices/
+         * OEM skins). Opening the file is now an explicit, optional action the
+         * user taps, and it's wrapped in try/catch so a failure there is just a
+         * toast, never a force-close.
+         */
+        suspend fun saveAndOfferToOpen(packagesToExport: List<SoalPackage>, choice: DownloadChoice) {
+            val savedFile = try {
+                withContext(Dispatchers.IO) { exportAndSave(packagesToExport, choice) }
+            } catch (e: Exception) {
+                null
+            }
+
+            if (savedFile == null) {
+                Toast.makeText(this@MainActivity, "Gagal membuat file unduhan", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val result = snackbarHostState.showSnackbar(
+                message = "Tersimpan di Downloads: ${savedFile.name}",
+                actionLabel = "Buka",
+                duration = SnackbarDuration.Long
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                try {
+                    FileSaver.shareFile(this@MainActivity, savedFile)
+                } catch (e: Exception) {
                     Toast.makeText(
                         this@MainActivity,
-                        "Tersimpan di Downloads: ${savedFile.name}",
-                        Toast.LENGTH_LONG
+                        "Tidak bisa membuka otomatis — cek folder Downloads.",
+                        Toast.LENGTH_SHORT
                     ).show()
-                    FileSaver.shareFile(this@MainActivity, savedFile)
-                } else {
-                    Toast.makeText(this@MainActivity, "Gagal membuat file unduhan", Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
+        fun handleDownload(choice: DownloadChoice) {
+            lifecycleScope.launch { saveAndOfferToOpen(packages, choice) }
+        }
+
         fun handleHistoryDownload(entry: HistoryEntry) {
-            lifecycleScope.launch {
-                val choice = if (entry.packages.size > 1) DownloadChoice.AllAsOnePdf()
-                else DownloadChoice.SinglePackage(SingleFormat.PDF)
-                val savedFile = withContext(Dispatchers.IO) {
-                    exportAndSave(entry.packages, choice)
-                }
-                if (savedFile != null) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Tersimpan di Downloads: ${savedFile.name}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    FileSaver.shareFile(this@MainActivity, savedFile)
-                }
-            }
+            val choice = if (entry.packages.size > 1) DownloadChoice.AllAsOnePdf()
+            else DownloadChoice.SinglePackage(SingleFormat.PDF)
+            lifecycleScope.launch { saveAndOfferToOpen(entry.packages, choice) }
         }
 
         Scaffold(
@@ -135,6 +151,7 @@ class MainActivity : ComponentActivity() {
                     )
                 )
             },
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             bottomBar = {
                 NavigationBar {
                     NavigationBarItem(

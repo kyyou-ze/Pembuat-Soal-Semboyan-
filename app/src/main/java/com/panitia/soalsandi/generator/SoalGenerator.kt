@@ -11,14 +11,21 @@ object SoalGenerator {
      * Hardcoded rule (not user-editable): 30 soal per paket.
      * 1-15  -> Sandi Kimia
      * 16-30 -> Sandi Merah Putih
+     *
+     * Letters within each 15-soal section are drawn WITHOUT replacement
+     * (each letter used at most once per section), so a letter repeating
+     * inside the same paket essentially never happens.
      */
     private fun generateOnePackage(name: String): SoalPackage {
+        val kimiaLetters = ('A'..'Z').shuffled().take(15)
+        val merahPutihLetters = ('A'..'Y').shuffled().take(15)
+
         val items = (1..30).map { number ->
             if (number <= 15) {
-                val letter = CipherData.randomLetter()
+                val letter = kimiaLetters[number - 1]
                 SoalItem(number, letter, CipherData.KIMIA.getValue(letter), SoalType.KIMIA)
             } else {
-                val letter = CipherData.randomLetterExcludingZ()
+                val letter = merahPutihLetters[number - 16]
                 SoalItem(number, letter, CipherData.MERAH_PUTIH.getValue(letter), SoalType.MERAH_PUTIH)
             }
         }
